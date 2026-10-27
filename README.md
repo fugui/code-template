@@ -7,7 +7,7 @@
 
 ## ✨ 模板内置能力一览
 
-* **一键派生脚手架 (`scripts/init-module.sh`)**：自动校验命名冲突，原子替换模块标识、端口、数据库表前缀、RBAC 角色与模块联邦配置。
+* **一键派生脚手架 (`scripts/init-module.sh`)**：自动校验命名冲突，原子替换模块标识、端口、数据库表前缀、RBAC 角色与模块联邦配置，并为新项目自动生成 **SDD (规范驱动) + TDD (测试驱动)** 文档骨架（`docs/00-prompt` ~ `docs/06-ops`）、专属 `AGENTS.md` 与 `README.md`。
 * **微前端与独立调试双模容器**：
   * **嵌入模式 (`isEmbedded=true`)**：自动融入 CodeBench 门户布局、共享登录态 JWT 与亮/暗主题，动态暴露 `./App` 与 `./menu`。
   * **独立模式 (`isEmbedded=false`)**：自带 `UnifiedLogin` 登录页、调试侧边栏与亮/暗主题切换器，支持无宿主独立开发调试。

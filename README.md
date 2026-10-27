@@ -31,11 +31,17 @@ workspace/
 执行一键初始化脚本（以新建 `monitor` 模块为例）：
 
 ```bash
-# 1. 克隆模板为你的新模块目录
+# 方式 A：直接在父级工作区目录一键派生（推荐，脚本会自动创建 code-monitor 目录）
+code-template/scripts/init-module.sh \
+  --key monitor \
+  --title "集群监控诊断" \
+  --port 8091 \
+  --dev-port 5181 \
+  --table-prefix mon_
+
+# 方式 B：从 Git 克隆后在目标目录下就地初始化
 git clone <code-template-repo-url> code-monitor
 cd code-monitor
-
-# 2. 一键初始化模块标识、中文名称、前后端端口与表名前缀
 bash scripts/init-module.sh \
   --key monitor \
   --title "集群监控诊断" \
@@ -43,7 +49,8 @@ bash scripts/init-module.sh \
   --dev-port 5181 \
   --table-prefix mon_
 
-# 3. 安装依赖、执行静态检查、运行单测并打包单二进制
+# 进入新模块目录，安装依赖、执行检查并编译验证
+cd code-monitor
 cp config.yaml.example config.yaml
 make install && make lint && make test && make build
 ```

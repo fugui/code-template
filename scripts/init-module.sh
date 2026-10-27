@@ -243,8 +243,10 @@ if [[ "$TARGET_DIR" != "$TEMPLATE_ROOT" ]]; then
       --exclude='docs' \
       --exclude='node_modules' \
       --exclude='dist' \
+      --exclude='package-lock.json' \
       --exclude='frontend/node_modules' \
       --exclude='frontend/dist' \
+      --exclude='frontend/package-lock.json' \
       --exclude='code-template-server' \
       --exclude='*-server' \
       --exclude='config.yaml' \
@@ -258,6 +260,7 @@ if [[ "$TARGET_DIR" != "$TEMPLATE_ROOT" ]]; then
   else
     cp -r "$TEMPLATE_ROOT/." "$TARGET_DIR/"
     rm -rf "$TARGET_DIR/.git" "$TARGET_DIR/docs" "$TARGET_DIR/frontend/node_modules" "$TARGET_DIR/frontend/dist" \
+           "$TARGET_DIR/package-lock.json" "$TARGET_DIR/frontend/package-lock.json" \
            "$TARGET_DIR/code-template-server" "$TARGET_DIR"/*-server "$TARGET_DIR/config.yaml" 2>/dev/null || true
   fi
 

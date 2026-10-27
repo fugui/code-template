@@ -372,94 +372,46 @@ if docs_dir.exists():
     shutil.rmtree(docs_dir)
 
 write_doc("AGENTS.md", f"""
-# AGENTS.md - {title} ({service_name}) 开发与协作准则
+# AGENTS.md - {title} ({service_name})
 
-本项目为 **code-{key}（{title}，CodeBench 微前端业务子系统）**。
-所有进入本项目的 AI 代理（Agents）与研发成员必须严格遵循本准则及工作区上位宪法（`../AGENTS.md` / `code-common/rules/AGENTS.md`）。
-
----
-
-## 1. 核心工程哲学：SDD (规范驱动) + TDD (测试驱动)
-
-本项目严禁直接跳过设计堆砌业务代码。所有开发工作必须遵循严格的四阶段流水线：
-> **「阶段一：特性与边界明确 (`docs/01-features/`) -> 阶段二：系统与模型设计 (`docs/02-design/`) -> 阶段三：接口契约与任务分解 (`docs/03-api/`, `docs/04-tasks/`) -> 阶段四：TDD 测试先行与工程交付」**
-
-### 研发阶段递进原则
-1. **阶段一：特性清单与边界明确 (`docs/01-features/01-feature-matrix.md`)**：明确 `{title}` 的核心领域特性矩阵、优先级（`P0/P1/P2`）、验收指标及 **Non-Goals（非目标边界）**。
-2. **阶段二：系统架构与数据模型设计 (`docs/02-design/`)**：
-   - `01-system-architecture.md`：微前端双模运行架构、GORM 数据表结构设计（强制以 `{table_prefix}` 为表名前缀）、核心业务状态流转与前端页面组件分层。
-3. **阶段三：接口契约与 TDD 任务分解 (`docs/03-api/`, `docs/04-tasks/`)**：
-   - `docs/03-api/01-http-api-contract.md`：冻结 RESTful API 路径、请求/响应 JSON Schema、RBAC 权限守卫矩阵（普通成员 vs `{admin_role}`）与审计 Diff 规范；
-   - `docs/04-tasks/01-roadmap.md`：工程实施路线图（Milestone DAG）与全局质量门禁；
-   - `docs/04-tasks/02-m1-*.md`：各 Milestone 作战卡、TDD 先行测试用例清单与自动化验收标准 (AC)。
-4. **阶段四：TDD 测试先行与工程实施 (`models/`, `handlers/`, `frontend/src/`)**：遵循 **Red -> Green -> Refactor** 循环，先编写单元测试（使用 `testdb.SetupIsolatedDB` 物理隔离数据库），再实现前后端业务代码。
+> 💡 **上位准则**：工作区通用 SDD+TDD 四阶段研发流水线、`docs/` 双位编号规范、Go/React 编码风格、双模主题 Token、通用分页及自动交付规章，统一遵循 [`../AGENTS.md`](../AGENTS.md)（`code-common/rules/AGENTS.md`），本文档仅定义本模块专属契约与边界。
 
 ---
 
-## 2. 模块元数据与技术契约 (Module Metadata & Guardrails)
+## 1. 模块专属契约 (Module Contract)
 
-| 契约项 | 规范值 | 约束说明 |
+| 契约项 | 规范值 | 强约束说明 |
 | :--- | :--- | :--- |
-| **模块唯一标识 (`ModuleKey`)** | `{key}` | 门户路由前缀 `/{key}`，Vite Federation 远端名称 `name: '{key}'` |
-| **Go 模块名** | `code-{key}` | 编译单二进制产物为 `code-{key}-server` |
-| **后端监听端口** | `:{port}` | 默认 HTTP 服务端口（支持通过 `config.yaml` 覆盖） |
-| **前端调试端口** | `{dev_port}` | Vite 独立开发服务器端口（代理 `/{key}/api` 与 `/api` 至 `:{port}`） |
-| **数据库表前缀 (`TablePrefix`)** | `{table_prefix}` | **红线**：所有新增 GORM 模型必须实现 `TableName()` 并以 `{table_prefix}` 开头 |
-| **模块管理员角色 (`AdminRole`)** | `{admin_role}` | 配合 `commonAuth.RequireAdmin("{admin_role}")` 保护管理接口（`super_admin` 自动放行） |
+| **模块标识 (`ModuleKey`)** | `{key}` | 门户路由前缀 `/{key}`，Vite Federation 名称 `name: '{key}'` |
+| **服务与二进制名** | `{service_name}` / `code-{key}-server` | Go Module: `code-{key}` |
+| **端口分配** | 后端 `:{port}` / 前端 `{dev_port}` | 验证完毕后必须主动关闭进程释放端口 |
+| **数据库表前缀 (`TablePrefix`)** | `{table_prefix}` | 本模块所有 GORM 模型 `TableName()` 必须以 `{table_prefix}` 开头 |
+| **管理员角色 (`AdminRole`)** | `{admin_role}` | 管理接口必须挂载 `commonAuth.RequireAdmin("{admin_role}")` |
 
 ---
 
-## 3. 目录边界与治理规范 (Layout & Policies)
+## 2. 目录结构与业务边界
 
 ```text
 code-{key}/
-├── docs/                # SDD + TDD 规范文档库：00-prompt ~ 06-ops，双位数字编号版本化管理
-├── config/              # 配置加载与模块级常量定义 (ModuleKey="{key}", TablePrefix="{table_prefix}")
-├── models/              # GORM v2 数据模型与数据库连接初始化（业务表统一带 {table_prefix} 前缀）
-├── handlers/            # Gin HTTP 控制器、RBAC 权限校验、操作审计 Diff 与 *_test.go 隔离单测
-├── frontend/            # React 18 + TypeScript + Vite 5 微前端工程
-│   ├── src/App.tsx      # 嵌入门户模式 (isEmbedded=true) 与独立调试模式双模根组件
-│   ├── src/menu.ts      # 动态暴露给 CodeBench 宿主的侧边栏菜单契约 (./menu)
-│   └── src/pages/       # 业务页面组件（严格遵循 --color-* 语义 Token 与 5 页滑动窗口 URL 分页）
-├── scripts/             # 工程辅助与自动化验证脚本
-├── Makefile             # 统一构建、测试与静态检查入口 (make test / make lint / make build)
-├── AGENTS.md            # AI Agent 协作准则与架构宪法
-└── README.md            # 项目主页与 SDD+TDD 研发路线图
+├── docs/                # SDD + TDD 规范文档库 (00-prompt ~ 06-ops)
+├── config/              # 配置加载与模块常量定义
+├── models/              # GORM 数据模型（强制 {table_prefix} 表前缀隔离）
+├── handlers/            # HTTP 控制器、RBAC 守卫、审计 Diff 与 *_test.go 隔离单测
+└── frontend/            # React 18 微前端工程（暴露 ./App 与 ./menu）
 ```
 
----
-
-## 4. 全栈编码与 TDD 质量红线
-
-1. **后端错误处理与操作审计**：
-   - 必须显式处理所有 `error`，**严禁使用 `_ = err` 忽略任何错误**。
-   - 关键写操作（Create / Update / Delete）必须调用 `commonAudit.Record` 或 `commonAudit.RecordDiff` 记录字段级变更审计。
-2. **TDD 物理隔离数据库测试**：
-   - 所有涉及数据库的单元测试必须调用 `testdb.SetupIsolatedDB(t)` 创建临时测试库；**严禁将 `TEST_DB_DSN` 指向共享生产库 `code_shield`**（仅限 `postgres` 管理库或 `*_test` 库）。
-3. **前端双模主题、样式与分页规范**：
-   - 严禁硬编码 `#fff`、`#000`、`rgba(...)` 等绝对颜色，100% 使用 `--color-*` 语义 Token 兼顾亮色（Light）与暗色（Dark）主题。
-   - 严禁静态内联 `style={{{{ ... }}}}` 与 `any` 类型；列表页必须使用 `@code/common` 的 `Pagination` + `usePagination` 同步 URL Search Params（默认 25 条/页，选项 15/25/50/100）。
-4. **进程清理与自动交付闭环**：
-   - 每次修改后必须通过 `make test && make lint && make build && make clean`；
-   - 单次回复前必须主动关闭所有拉起的后台测试或服务进程，严禁留存进程占用 `:{port}` 或 `:{dev_port}` 端口；
-   - 确认构建与测试全部通过且已配置远端仓库后，直接提交（遵循 Conventional Commits 中文描述）并 push。
+* **本模块专有架构红线**：*(随阶段二 `docs/02-design/` 演进在此补充领域防腐约束)*
 
 ---
 
-## 5. 常用开发与验证指令速查
+## 3. 常用验证命令
 
 ```bash
-# 运行后端格式化、静态检查与单元测试
-make test
-
-# 运行带物理隔离 PostgreSQL 临时库的全量 CRUD 单元测试
-TEST_DB_DSN="host=127.0.0.1 port=5432 user=postgres password=YOUR_PWD dbname=postgres sslmode=disable" make test
-
-# 运行前端 TypeScript 类型检查与 ESLint 规范检查
-make lint
-
-# 编译前端模块联邦产物并内嵌打包 Go 单二进制 (./code-{key}-server)
-make build
+make test                                                                                      # 后端 fmt + vet + 单元测试
+TEST_DB_DSN="host=127.0.0.1 port=5432 user=postgres password=PWD dbname=postgres sslmode=disable" make test  # 物理隔离库全量单测
+make lint                                                                                      # 前端 tsc + eslint 检查
+make build && make clean                                                                       # 单二进制打包验证并清理产物
 ```
 """)
 
